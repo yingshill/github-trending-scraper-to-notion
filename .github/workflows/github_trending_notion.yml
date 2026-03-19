@@ -30,10 +30,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Dependencies
+      - name: Install and Verify Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 notion-client
+          
+          # Install pinned deps (avoid surprises / collisions)
+          pip install "requests==2.31.0" "beautifulsoup4==4.12.3" "notion-client==2.2.1"
+          
+          echo "---- pip freeze (notion-related) ----"
+          pip freeze | grep -i notion || true
+          
+          echo "---- python import sanity ----"
+          # Verify the module is correctly installed and accessible
+          python -c "import notion_client; print('notion_client module:', notion_client)"
+          
+          # Verify the Client and the query method exist
+          python -c "from notion_client import Client; c=Client(auth='dummy'); print('databases endpoint type:', type(c.databases)); print('has databases.query:', hasattr(c.databases,'query'))"
 
       - name: Run Crawler Script
         env:
