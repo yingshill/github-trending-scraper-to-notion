@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-import hashlib
+
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import requests
@@ -85,7 +85,8 @@ def fetch_trending() -> list[dict]:
     items = []
     for art in soup.select("article.Box-row"):
         h2 = art.select_one("h2.h3 a")
-        if not h2: continue
+        if not h2: 
+            continue
         repo_path = h2.get("href", "").strip("/")
         repo_full = repo_path.replace(" ", "")
         repo_url = f"https://github.com/{repo_full}"
@@ -105,13 +106,15 @@ def filter_and_rank(repos: list[dict], limit: int = 5) -> list[dict]:
     scored = []
     for r in repos:
         blob = f"{r['repo_full']} {r.get('description','')} {r.get('language','')}"
-        if is_blacklisted(blob): continue
+        if is_blacklisted(blob): 
+            continue
         
         tags = match_tags(blob)
         lang = text_norm(r.get("language", ""))
         is_python = (lang == "python")
         
-        if not tags and not is_python: continue
+        if not tags and not is_python: 
+            continue
 
         # Score: Python + count of matched tags
         score = (3 if is_python else 0) + len(tags)
@@ -124,12 +127,14 @@ def filter_and_rank(repos: list[dict], limit: int = 5) -> list[dict]:
 # --- Notion Operations ---
 def notion_client() -> NotionClient:
     token = os.environ.get("NOTION_TOKEN")
-    if not token: raise RuntimeError("Missing env NOTION_TOKEN")
+    if not token: 
+        raise RuntimeError("Missing env NOTION_TOKEN")
     return NotionClient(auth=token)
 
 def notion_db_id() -> str:
     db_id = os.environ.get("NOTION_DB_ID_GITHUB_TRENDING")
-    if not db_id: raise RuntimeError("Missing env NOTION_DB_ID_GITHUB_TRENDING")
+    if not db_id: 
+        raise RuntimeError("Missing env NOTION_DB_ID_GITHUB_TRENDING")
     return db_id
 
 def query_existing_urls_for_today(notion: NotionClient, db_id: str, today: str) -> set[str]:
@@ -141,12 +146,15 @@ def query_existing_urls_for_today(notion: NotionClient, db_id: str, today: str) 
             "page_size": 100,
             "filter": {"property": "Date", "date": {"equals": today}}
         }
-        if cursor: payload["start_cursor"] = cursor
+        if cursor: 
+            payload["start_cursor"] = cursor
         res = notion.databases.query(**payload)
         for row in res.get("results", []):
             u = row.get("properties", {}).get("URL", {}).get("url")
-            if u: urls.add(u)
-        if not res.get("has_more"): break
+            if u: 
+                urls.add(u)
+        if not res.get("has_more"): 
+            break
         cursor = res.get("next_cursor")
     return urls
 
@@ -156,7 +164,8 @@ def create_notion_page(notion: NotionClient, db_id: str, today: str, repo: dict)
 
     lang = repo.get("language") or "Other"
     allowed_langs = ["Python", "Jupyter Notebook", "TypeScript", "JavaScript", "Go", "Rust", "C++"]
-    if lang not in allowed_langs: lang = "Other"
+    if lang not in allowed_langs: 
+        lang = "Other"
 
     props = {
         "Title": {"title": [{"text": {"content": title}}]},
