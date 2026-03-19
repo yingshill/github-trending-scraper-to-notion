@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import requests
 from bs4 import BeautifulSoup
-from notion_client import Client as NotionClient
+from notion_client import Client
 
 # --- Configuration ---
 GITHUB_TRENDING_URL = "https://github.com/trending?since=daily"
@@ -125,11 +125,11 @@ def filter_and_rank(repos: list[dict], limit: int = 5) -> list[dict]:
     return [item[1] for item in scored[:limit]]
 
 # --- Notion Operations ---
-def notion_client() -> NotionClient:
+def notion_client() -> Client:
     token = os.environ.get("NOTION_TOKEN")
     if not token: 
         raise RuntimeError("Missing env NOTION_TOKEN")
-    return NotionClient(auth=token)
+    return Client(auth=token)
 
 def notion_db_id() -> str:
     db_id = os.environ.get("NOTION_DB_ID_GITHUB_TRENDING")
@@ -137,7 +137,7 @@ def notion_db_id() -> str:
         raise RuntimeError("Missing env NOTION_DB_ID_GITHUB_TRENDING")
     return db_id
 
-def query_existing_urls_for_today(notion: NotionClient, db_id: str, today: str) -> set[str]:
+def query_existing_urls_for_today(notion: Client, db_id: str, today: str) -> set[str]:
     urls = set()
     cursor = None
     while True:
@@ -158,7 +158,7 @@ def query_existing_urls_for_today(notion: NotionClient, db_id: str, today: str) 
         cursor = res.get("next_cursor")
     return urls
 
-def create_notion_page(notion: NotionClient, db_id: str, today: str, repo: dict):
+def create_notion_page(notion: Client, db_id: str, today: str, repo: dict):
     primary_tag = repo["tags"][0] if repo.get("tags") else "python"
     title = f"[GitHub][{primary_tag}] {repo['repo_full']}"
 
