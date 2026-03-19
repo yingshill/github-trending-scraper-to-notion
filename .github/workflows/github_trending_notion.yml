@@ -1,0 +1,43 @@
+name: GitHub Trending → Notion (Daily)
+
+on:
+  workflow_dispatch: {} # Allows manual triggering
+  schedule:
+    # 15:00 UTC is 08:00 AM PDT (Summer)
+    - cron: "0 15 * * *"
+    # 16:00 UTC is 08:00 AM PST (Winter)
+    - cron: "0 16 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-trending-to-notion
+  cancel-in-progress: false
+
+jobs:
+  run-crawler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 notion-client
+
+      - name: Run Crawler Script
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB_ID_GITHUB_TRENDING: ${{ secrets.NOTION_DB_ID_GITHUB_TRENDING }}
+        run: |
+          python main_notion.py
