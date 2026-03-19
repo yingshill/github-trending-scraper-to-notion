@@ -148,7 +148,7 @@ def query_existing_urls_for_today(notion: NotionClient, db_id: str, today: str) 
         }
         if cursor: 
             payload["start_cursor"] = cursor
-        res = notion.databases.query(**payload)
+        res = notion.databases.query(database_id=db_id, filter={...})
         for row in res.get("results", []):
             u = row.get("properties", {}).get("URL", {}).get("url")
             if u: 
