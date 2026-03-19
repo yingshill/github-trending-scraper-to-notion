@@ -5,5 +5,3 @@
 This is a Python web scraper that's used to scrape the GitHub Trending page to get the trending repository for a specific language.
 It will upload the results to Cloudflare KV, then to be used for a variety of Mastodon bots that post the trending repository of the day for their specified language.
 
-- Install libs:
-    - `pip install notion-client requests beautifulsoup4`
